@@ -53,7 +53,9 @@ class MCPToolBase(ABC):
     async def _make_request(self, url: str) -> Dict[str, Any]:
         """Make HTTP request with retry logic."""
         async with httpx.AsyncClient(timeout=self.timeout) as client:
+            print(f"Making request to URL: {url}")  # Debug statement
             response = await client.get(url)
+            print(f"Received response with status code {response.status_code}")  # Debug statement
             response.raise_for_status()
             return response.json()
     
@@ -70,7 +72,9 @@ class MCPToolBase(ABC):
         try:
             logger.info(f"Executing {self.name} for listing {listing_id}")
             url = self._build_url(listing_id)
+            # print(f"Requesting URL: {url}")  # Debug statement
             data = await self._make_request(url)
+            # print(f"Raw response data: {data}")  # Debug statement
             
             # Normalize the response
             normalized_data = self._normalize_response(data)

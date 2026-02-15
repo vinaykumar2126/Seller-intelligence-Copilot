@@ -78,7 +78,7 @@ Return ONLY a JSON array of tool names, nothing else. For example: ["get_seller_
 If the question is general or asks "why is my product not selling", call ALL tools.
 If the question is specific (e.g., about pricing), call only relevant tools.
 
-Response (JSON array only):"""
+Response (JSON array only):""" # User query + tool descriptions(Context) + instructions for tool selection
 
             logger.info(f"Requesting tool selection from LLM for question: {question}")
             
@@ -97,6 +97,7 @@ Response (JSON array only):"""
             
             # Parse response
             content = response['message']['content'].strip()
+            print(f"LLM tool selection raw response: {content}")
             
             # Try to extract JSON array
             # Handle cases where LLM might wrap in markdown code blocks
@@ -233,16 +234,22 @@ Response (JSON only):"""
         try:
             # Try to list models
             models = ollama.list()
-            model_names = [m['name'] for m in models.get('models', [])]
+            models_list = models.get('models', [])
+            model_names = []
+            for m in models_list:
+                name = m.get('name') or m.get('model')  # Depending on ollama version, it might be 'name' or 'model'
+                if name:
+                    model_names.append(name)
+            logger.info(f"Available Ollama models: {model_names}")
             
             # Check if our model is available
-            if self.model not in model_names and f"{self.model}:latest" not in model_names:
+            if self.model in model_names or f"{self.model.split(':')[0]}:latest" in model_names:
+                logger.info(f"✅ Ollama is available with model: {self.model}")
+                return True
+            else: 
                 logger.warning(f"Model {self.model} not found. Available models: {model_names}")
                 return False
             
-            logger.info(f"Ollama is available with model: {self.model}")
-            return True
-            
         except Exception as e:
-            logger.error(f"Ollama availability check failed: {e}")
+            logger.error(f"Ollama availability check failed: {e}", exc_info=True)
             return False

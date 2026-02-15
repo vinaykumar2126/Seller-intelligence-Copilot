@@ -54,5 +54,5 @@ async def get_fulfillment_data(listing_id: str):
             in_stock=True,
             fulfillment_method="FBM"
         )
-    
+    print(f"Returning fulfillment data for listing {listing_id}: {MOCK_FULFILLMENT[listing_id]}")  # Debug statement
     return MOCK_FULFILLMENT[listing_id]

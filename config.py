@@ -15,11 +15,11 @@ class Settings(BaseSettings):
     
     # LLM Configuration
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3"  # Default model, can be overridden
+    OLLAMA_MODEL: str = "llama3.2:latest"  # Default model, can be overridden
     
     # Timeouts (seconds)
     SERVICE_TIMEOUT: int = 10
-    LLM_TIMEOUT: int = 60
+    LLM_TIMEOUT: int = 6
     
     # Logging
     LOG_LEVEL: str = "INFO"

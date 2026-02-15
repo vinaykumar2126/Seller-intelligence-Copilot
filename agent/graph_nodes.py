@@ -35,6 +35,7 @@ class LangGraphNodes:
         logger.info("🎯 [ToolSelector] Starting...")
         
         question = state["question"]
+
         
         # Get tool descriptions
         tool_descriptions = [tool.to_llm_description() for tool in self.available_tools]
@@ -44,7 +45,8 @@ class LangGraphNodes:
             question=question,
             available_tools=tool_descriptions
         )
-        
+
+
         # Validate tool names
         valid_tool_names = [tool.name for tool in self.available_tools]
         selected_tools = [name for name in tool_names if name in valid_tool_names]
@@ -90,7 +92,8 @@ class LangGraphNodes:
         for tool_name in selected_tools:
             try:
                 tool = get_tool_by_name(tool_name)
-                task = tool.execute(listing_id)
+                task = tool.execute(listing_id) # Just a promise, not awaiting yet
+                # print(task)
                 tasks.append(task)
                 tool_names.append(tool_name)
             except ValueError as e:
@@ -98,7 +101,7 @@ class LangGraphNodes:
                 continue
         
         # Execute all tools in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True) # Just like Promise.allSettled in JS, we get results and exceptions without failing the whole batch
         
         # Collect results
         tool_results = {}
@@ -194,6 +197,7 @@ class LangGraphNodes:
             for tool_name, result in tool_results.items()
             if result.get("success", False) and result.get("data")
         }
+        print(successful_results)
         
         if not successful_results:
             return {

@@ -51,9 +51,14 @@ async def get_seller_metrics(listing_id: str):
     
     if listing_id not in MOCK_METRICS:
         logger.warning(f"Listing {listing_id} not found")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Listing '{listing_id}' not found. Available test listings: listing_001, listing_002, listing_003, 12345"
+        return SellerMetrics(
+            listing_id=listing_id,
+            seller_price=50.00,
+            median_competitor_price=50.00,
+            price_percentile=50.0,
+            currency="USD",
+            price_difference_percent=0.0
         )
+    print(f"Found metrics for listing {listing_id}: {MOCK_METRICS[listing_id]}")  # Debug statement
     
     return MOCK_METRICS[listing_id]
