@@ -6,6 +6,7 @@ import ollama
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from config import settings
+from .prompt_templates import TOOL_SELECTION_PROMPT, ANALYSIS_PROMPT, FALLBACK_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -64,21 +65,11 @@ class OllamaClient:
                 f"- {tool['name']}: {tool['description']}"
                 for tool in available_tools
             ])
+            prompt = TOOL_SELECTION_PROMPT.format(
+                tools_description=tools_description,
+                question=question
+            )
             
-            prompt = f"""You are an assistant helping to analyze e-commerce product listings.
-
-Available tools:
-{tools_description}
-
-User's question: "{question}"
-
-Based on the question, which tools should we call to gather the necessary data?
-Return ONLY a JSON array of tool names, nothing else. For example: ["get_seller_metrics", "get_pricing_data"]
-
-If the question is general or asks "why is my product not selling", call ALL tools.
-If the question is specific (e.g., about pricing), call only relevant tools.
-
-Response (JSON array only):""" # User query + tool descriptions(Context) + instructions for tool selection
 
             logger.info(f"Requesting tool selection from LLM for question: {question}")
             
@@ -107,6 +98,7 @@ Response (JSON array only):""" # User query + tool descriptions(Context) + instr
                 content = content.split("```")[1].split("```")[0].strip()
             
             tool_names = json.loads(content)
+            print(f"LLM tool selection parsed response: {tool_names}")
             
             logger.info(f"LLM selected tools: {tool_names}")
             return tool_names
@@ -145,39 +137,12 @@ Response (JSON array only):""" # User query + tool descriptions(Context) + instr
         try:
             # Build the prompt with all data
             data_summary = json.dumps(tool_results, indent=2)
+
+            prompt = ANALYSIS_PROMPT.format(
+                question=question,
+                data_summary=data_summary
+            )
             
-            prompt = f"""You are an expert e-commerce consultant analyzing why a product isn't selling well.
-
-Seller's question: "{question}"
-
-Data collected from marketplace systems:
-{data_summary}
-
-Based on this REAL data (do not make up any numbers), provide:
-
-1. DIAGNOSIS: A clear, 2-3 sentence explanation of the main issues preventing sales. Be specific and cite the actual numbers from the data.
-
-2. RECOMMENDATIONS: 3-5 actionable bullet points the seller can implement immediately. Each should be specific and based on the data.
-
-Format your response as JSON:
-{{
-  "diagnosis": "Your diagnosis here...",
-  "recommendations": [
-    "First recommendation...",
-    "Second recommendation...",
-    "Third recommendation..."
-  ]
-}}
-
-Important:
-- Only reference data that was provided
-- Be specific with numbers (e.g., "Your CTR is 1%, which is below the 3% benchmark")
-- Use business-friendly language
-- Focus on actionable items
-- Prioritize the most impactful issues
-
-Response (JSON only):"""
-
             logger.info("Requesting analysis from LLM")
             
             response = ollama.chat(

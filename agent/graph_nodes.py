@@ -197,7 +197,7 @@ class LangGraphNodes:
             for tool_name, result in tool_results.items()
             if result.get("success", False) and result.get("data")
         }
-        print(successful_results)
+        # print(successful_results)
         
         if not successful_results:
             return {
