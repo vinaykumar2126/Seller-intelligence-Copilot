@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
         logger.info(f"✅ Ollama LLM is available (model: {settings.OLLAMA_MODEL})")
     
     # Display crew info
-    crew_status = agent_crew.get_crew_status()
+    crew_status = await agent_crew.get_crew_status()
     logger.info(f"\n🔗 LangGraph Workflow:")
     logger.info(f"   Framework: {crew_status['framework']}")
     logger.info(f"   Workflow: {crew_status['workflow_type']}")
@@ -103,11 +103,10 @@ async def root():
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
-        health_status = await agent_crew.health_check()
+        health_status = await agent_crew.get_crew_status()
         
         is_healthy = (
-            health_status["crew"] == "healthy" and
-            health_status["llm"] == "healthy"
+            health_status["status"] == "healthy" 
         )
         
         status_code = status.HTTP_200_OK if is_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
@@ -131,12 +130,10 @@ async def health_check() -> Dict[str, Any]:
 @app.get("/crew/status", tags=["Crew"])
 async def get_crew_status() -> Dict[str, Any]:
     """Get agent crew status and last execution info."""
-    crew_status = agent_crew.get_crew_status()
-    execution_summary = agent_crew.get_execution_summary()
+    crew_status = await agent_crew.get_crew_status()
     
     return {
         "crew": crew_status,
-        "last_execution": execution_summary,
         "description": "Multi-agent crew for seller intelligence"
     }
 

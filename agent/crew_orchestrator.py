@@ -164,13 +164,13 @@ class AgentCrew:
                 }
             }
     
-    def get_crew_status(self) -> Dict[str, Any]:
+    async def get_crew_status(self) -> Dict[str, Any]:
         """Get current status of the LangGraph crew."""
         return {
             "framework": "LangGraph",
             "graph_nodes": ["tool_selector", "data_collector", "analyst", "recommender"],
             "workflow_type": "sequential",
-            "status": "ready"
+            "status": "healthy"
         }
     
     def get_workflow_diagram(self) -> list[Dict[str, str]]:
